@@ -28,17 +28,18 @@ bot.on('message', msg => {
         msg.content = msg.content.substring(1);
         const args = msg.content.split(/ +/);
         const command = args.shift().toLowerCase();
-        console.info(`Called command ${command} with arguments: ${args}`);
-        // If there is no valid command, just log error
-        if (!bot.commands.has(command)) {
-            console.error('no command.')
+        
+        // If there is  valid command, execute it, or just log error
+        if (bot.commands.has(command)) {
+            console.info(`Called command ${command} with arguments: ${args}`);
+            try {
+                bot.commands.get(command).execute(msg, args, msg.channel);
+            } catch(error) {
+                console.error(error);
+                msg.reply('There was an error trying to execute this command...')
+            }
+        } else {
+            console.error('no command.');
         };
-
-        try {
-            bot.commands.get(command).execute(msg, args, msg.channel);
-        } catch(error) {
-            console.error(error);
-            msg.reply('There was an error trying to execute this command...')
-        }
     };
 });

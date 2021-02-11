@@ -1,5 +1,6 @@
 module.exports = {
     Ping: require('./ping'),
     Clear: require('./clear'),
-    Aeropress: require('./aeropress'),
+    Recept: require('./recept'),
+    Hra: require('./hra')
 };
