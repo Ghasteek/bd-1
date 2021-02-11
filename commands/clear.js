@@ -1,6 +1,6 @@
 module.exports = {
     name: 'clear',
-    description: 'Clear chat.!',
+    description: 'Clear chat.',
     execute(msg, args, channel) {
         if (msg.member.permissionsIn(channel).toArray().includes('MANAGE_MESSAGES')) {
             let messagesToDelete = parseInt(args) + 1;
