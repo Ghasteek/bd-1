@@ -33,5 +33,12 @@ bot.on('message', msg => {
         if (!bot.commands.has(command)) {
             console.error('no command.')
         };
+
+        try {
+            bot.commands.get(command).execute(msg, args, msg.channel);
+        } catch(error) {
+            console.error(error);
+            msg.reply('There was an error trying to execute this command...')
+        }
     };
 });
