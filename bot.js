@@ -1,8 +1,10 @@
 require('dotenv').config();
 
+let reactionRoles = require('./services/reaction_roles');
+
 // new bot instance
 const Discord = require('discord.js');
-const bot = new Discord.Client();
+const bot = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
 
 // defining custom commands from ./commands
 bot.commands = new Discord.Collection();
@@ -16,8 +18,11 @@ bot.login(process.env.TOKEN);
 
 // Print info about success connecting of bot
 bot.on('ready', () => {
-    console.info(`Logged in as ${bot.user.tag}.`);
+    console.info(`Logged in as ${bot.user.username}.`);
+	// init reaction roles handler
+	reactionRoles.init(bot, data, usableEmojis);
 });
+
 
 // Handle messages on discord server
 bot.on('message', msg => {
@@ -42,4 +47,19 @@ bot.on('message', msg => {
             console.error('no command.');
         };
     };
+});
+
+
+// load DATA from *.json file that specifies message to which add listener and emoji - role pairs to assign
+const fs = require('fs');
+const filePath = 'data/roles.json';
+let rawData = fs.readFileSync(filePath);
+let data = JSON.parse(rawData);
+let usableEmojis = Object.keys(data.roles);
+
+// reaction handler from RAW packets (standart actions didnt woked, so I had to use these RAW packets...)
+bot.on('raw', async packet => {
+	if (((packet.t == "MESSAGE_REACTION_REMOVE") || (packet.t == "MESSAGE_REACTION_ADD")) && (packet.d.message_id == data.messageID) && (usableEmojis.includes(packet.d.emoji.name))) {
+		reactionRoles.process(bot, packet, data.roles);
+	};
 });
