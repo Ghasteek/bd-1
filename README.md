@@ -7,6 +7,7 @@
 
     !ping - odpoví klasickým pong! </ br>
     !recept - odepíše náhodný recept na kávu</ br>
+    !hra - zahrajte si s botem kámen-nůžky-papír
 
 
     <b>Pro moderátory</b>

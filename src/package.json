@@ -2,7 +2,7 @@
   "name": "bd-1",
   "version": "1.0.0",
   "description": "Simple Node.js bot for Discord",
-  "main": "bot.js",
+  "main": "index.js",
   "dependencies": {
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0"
@@ -12,11 +12,11 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "bot": "nodemon bot.js"
+    "serve": "nodemon index.js"
   },
   "repository": {
     "type": "git",
-    "url": "bd-1"
+    "url": "https://github.com/ghasteek/bd-1"
   },
   "keywords": [
     "node.js",
