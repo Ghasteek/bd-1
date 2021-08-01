@@ -5,6 +5,7 @@ const Discord = require('discord.js');
 
 // get 
 let reactionRoles = require('./services/reaction_roles');
+let ytb_checker = require('./services/ytb_checker');
 
 // new bot instance
 const bot = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
@@ -46,6 +47,7 @@ bot.on('ready', () => {
     console.info(`Logged in as ${bot.user.username}.`);
     // init reaction roles handler
     reactionRoles.init(bot, data, usableEmojis);
+    ytb_checker.start(bot);
 });
 
 
