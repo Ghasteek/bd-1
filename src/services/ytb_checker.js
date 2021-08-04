@@ -1,44 +1,26 @@
+require('dotenv').config();
 const fs = require('fs');
-
-const puppeteer = require('puppeteer');
+const axios = require('axios');
 
 var interval;
 var botInstance;
 const filePath = 'data/channels.json';
 
-
-async function getLastVideo(channelUrl) {
-  const browser = await puppeteer.launch({
-    executablePath: '/usr/bin/chromium-browser'
-  })
-  const page = await browser.newPage()
-  await page.setDefaultNavigationTimeout(60000)
-  await page.setViewport({ width: 1920, height: 969 })
-
-  const navPromise = page.waitForNavigation();
-
-  await page.goto(channelUrl + '/videos')
-
-  await page.waitForSelector('button[jsname="higCR"]')
-  await page.click('button[jsname="higCR"]')
-  await page.waitForSelector('#video-title', { timeout: 60000 })
-    .catch(err => {
-      console.log(`error with URL: ${channelUrl}`)
-    })
-
-  await navPromise;
-
-  var lastVideo = await page.evaluate((selector) => {
-    var channel = document.querySelector('yt-formatted-string[class="style-scope ytd-channel-name"]').innerHTML
-    var title = document.querySelector(selector).innerText
-    var url = document.querySelector(selector).href
-    return { channel, title, url }
-  }, '#video-title');
-
-  // console.log(lastVideo);
-
-  await browser.close()
-  return lastVideo;
+async function getLastVideo(playlist) {
+  return new Promise((resolve, reject) => {
+    axios.get(`https://www.googleapis.com/youtube/v3/playlistItems?key=${process.env.YTB_API_KEY}&playlistId=${playlist}&part=snippet&order=date`)
+      .then(resp => {
+        let video = {
+          lastVideoTitle: resp.data.items[0].snippet.title,
+          lastVideoId: resp.data.items[0].snippet.resourceId.videoId,
+        };
+        resolve(video);
+      })
+      .catch(err => {
+        console.log('Error..', err);
+        reject(err);
+      });
+  });
 }
 
 async function ytb_checker() {
@@ -50,33 +32,38 @@ async function ytb_checker() {
 
   // check for new videos
   var index = 0;
-  channels.forEach(async element => {
-    let lastVideo = await getLastVideo(element.url + '/videos');
-    if (lastVideo.url !== element.lastVideoUrl) {
-      element.wasNew = true;
-      element.lastVideoUrl = lastVideo.url;
-      element.lastVideo = lastVideo;
-    }
-    index++;
-    if (index === channels.length) {
-      index = 0;
-      processVideos(channels);
-    }
+  channels.forEach(async channel => {
+    await getLastVideo(channel.playlistId)
+      .then(video => {
+        if (video.lastVideoId !== channel.lastVideoId) {
+          channel.wasNew = true;
+          channel.lastVideoId = video.lastVideoId;
+          channel.lastVideoTitle = video.lastVideoTitle;
+        }
+        index++;
+        if (index === channels.length) {
+          index = 0;
+          processVideos(channels);
+        }
+      });
   });
 }
 
+/**
+ * Takes array of channels and theirs last videos. If there were some new, post info and save json.
+ * @param Array channels - array of channels and their last videos 
+ */
 function processVideos(channels) {
   let dirty = false;
 
-  channels.forEach((el) => {
-    if (el.wasNew === true) {
+  channels.forEach((channel) => {
+    if (channel.wasNew && channel.wasNew === true) {
       dirty = true;
       console.log('Sending new video notify');
 
-      botInstance.channels.cache.get(el.discordChannel)
-        .send(`<@&810133478959349790> **${el.lastVideo.channel}** má nové video, koukej! **${el.lastVideo.title}** ${el.lastVideo.url}`)
-      delete el.wasNew;
-      delete el.lastVideo;
+      botInstance.channels.cache.get(channel.discordChannel)
+        .send(`<@&810133478959349790> **${channel.channelName}** má nové video, koukej! **${channel.lastVideoTitle}** https://www.youtube.com/watch?v=${channel.lastVideoId}`)
+      delete channel.wasNew;
     }
   });
 
@@ -90,7 +77,6 @@ function processVideos(channels) {
     }
   } else {
     console.log('check done')
-
   }
 }
 
@@ -115,3 +101,15 @@ module.exports = {
     console.log('Stopped ytb checker.')
   }
 };
+
+
+  // // ask this when adding new channel      
+  // axios.get(`https://www.googleapis.com/youtube/v3/channels?key=${process.env.YTB_API_KEY}&id=${channelId}&part=contentDetails,snippet`)
+  //   .then(resp => {
+  //     let channel = {
+  //       title: resp.data.items[0].snippet.title,
+  //       id: channelId,
+  //       upload: resp.data.items[0].contentDetails.relatedPlaylists.uploads,
+  //     }
+  //     return channel;
+  //   });
