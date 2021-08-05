@@ -12,4 +12,5 @@
 
     <b>Pro moderátory</b>
     !clear X - smaže X posledních přízpěvků
+    !ytb <ID discord kanálu, kam postovat novinky> <ID youtube kanálu> <ID role, kterou chceme pingnout v přízpěvku>
 </p>

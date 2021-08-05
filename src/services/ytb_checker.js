@@ -62,7 +62,7 @@ function processVideos(channels) {
       console.log('Sending new video notify');
 
       botInstance.channels.cache.get(channel.discordChannel)
-        .send(`<@&810133478959349790> **${channel.channelName}** má nové video, koukej! **${channel.lastVideoTitle}** https://www.youtube.com/watch?v=${channel.lastVideoId}`)
+        .send(`<@&${channel.discordMention}> **${channel.channelName}** má nové video, koukej! **${channel.lastVideoTitle}** https://www.youtube.com/watch?v=${channel.lastVideoId}`)
       delete channel.wasNew;
     }
   });
@@ -87,7 +87,7 @@ module.exports = {
    */
   start(bi) {
     botInstance = bi;
-    ytb_checker();
+    // ytb_checker();
     interval = setInterval(() => {
       ytb_checker();
     }, 600000);
@@ -101,15 +101,3 @@ module.exports = {
     console.log('Stopped ytb checker.')
   }
 };
-
-
-  // // ask this when adding new channel      
-  // axios.get(`https://www.googleapis.com/youtube/v3/channels?key=${process.env.YTB_API_KEY}&id=${channelId}&part=contentDetails,snippet`)
-  //   .then(resp => {
-  //     let channel = {
-  //       title: resp.data.items[0].snippet.title,
-  //       id: channelId,
-  //       upload: resp.data.items[0].contentDetails.relatedPlaylists.uploads,
-  //     }
-  //     return channel;
-  //   });

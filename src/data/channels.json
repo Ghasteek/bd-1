@@ -5,7 +5,8 @@
     "playlistId": "UUMb0O2CdPBNi-QqPk5T3gsQ",
     "lastVideoId": "Umb2lhcxHHU",
     "lastVideoTitle": "My Nemesis: The Coffee Scoop",
-    "discordChannel": "809344296150368268"
+    "discordChannel": "809344296150368268",
+    "discordMention": "810133478959349790"
   },
   {
     "channelId": "UCNCg231F4jeJ6DjjcYv0MGg",
@@ -13,7 +14,8 @@
     "playlistId": "UUNCg231F4jeJ6DjjcYv0MGg",
     "lastVideoId": "uJIAYOLO8OY",
     "lastVideoTitle": "Eureka Oro Mignon XL 65E Coffee Grinder Overview",
-    "discordChannel": "809344296150368268"
+    "discordChannel": "809344296150368268",
+    "discordMention": "810133478959349790"
   },
   {
     "channelId": "UCZQQDp_XZL1AkZ36ToAU_mw",
@@ -21,7 +23,8 @@
     "playlistId": "UUZQQDp_XZL1AkZ36ToAU_mw",
     "lastVideoId": "C8_DIXoIMv4",
     "lastVideoTitle": "Single Origin Coffee: a Beginner’s Guide",
-    "discordChannel": "809344296150368268"
+    "discordChannel": "809344296150368268",
+    "discordMention": "810133478959349790"
   },
   {
     "channelId": "UCgk5vlpGa_SEok6taD8iodg",
@@ -29,6 +32,16 @@
     "playlistId": "UUgk5vlpGa_SEok6taD8iodg",
     "lastVideoId": "H_0TtlSZV2A",
     "lastVideoTitle": "Trade Coffee Subscription Review | Worth The Hype?!",
-    "discordChannel": "809344296150368268"
+    "discordChannel": "809344296150368268",
+    "discordMention": "810133478959349790"
+  },
+  {
+    "channelName": "Linus Tech Tips",
+    "channelId": "UCXuqSBlHAE6Xw-yeJA0Tunw",
+    "playlistId": "UUXuqSBlHAE6Xw-yeJA0Tunw",
+    "lastVideoId": "8T3SLSfauAI",
+    "lastVideoTitle": "Halo is BACK - Halo Infinite Technical Preview Reaction",
+    "discordChannel": "809344296150368268",
+    "discordMention": "810133478959349790"
   }
 ]
