@@ -1,11 +1,8 @@
 require('dotenv').config();
-const fs = require('fs');
 const axios = require('axios');
 
-/**
- * Path to file with already watched channels
- */
-const FILE_PATH = 'data/channels.json';
+const mongo = require('../services/mongo');
+const checker = require('../services/ytb_checker');
 
 /**
  * Take channel object and save it to file. Then, thanks to msg object, will answer to user, that channel was added to watched
@@ -14,20 +11,14 @@ const FILE_PATH = 'data/channels.json';
  * @param {Object} msg - message object of command message
  */
 function saveNewChannel(channel, msg) {
-  // load channels from file
-  let rawData = fs.readFileSync(FILE_PATH);
-  let channels = JSON.parse(rawData);
-
-  // add new channel and save
-  channels.push(channel);
-
   try {
-    fs.writeFileSync(FILE_PATH, JSON.stringify(channels, null, 2));
+    let newChannel = new mongo.ytbChannels(channel);
+    newChannel.save();
     console.log(`User ${msg.author.tag} added ytb channel ${channel.channelName}`);
     msg.reply(`Přidán kanál  ${channel.channelName} 👍`);
     msg.delete();
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -38,21 +29,17 @@ function saveNewChannel(channel, msg) {
  * @param {Object} msg - message object of command message
  * @returns Boolean - is channel watched > TRUE, is not watched > FALSE
  */
-function isWatched(channelId, msg) {
+async function isWatched(channelId, msg) {
   // is channel already watched?
-  let rawData = fs.readFileSync(FILE_PATH);
-  let channels = JSON.parse(rawData);
-  let answer = false;
-  channels.forEach(element => {
-    if (element.channelId === channelId) {
-      answer = true;
-      // if channel is already watched, notify user and remove message with command
-      console.log(`User ${msg.author.tag} tried to add already watched channel.`)
-      msg.reply(`Kanál ${element.channelName} je již sledován ✋`);
-      msg.delete();
-    }
-  });
-  return answer;
+  const channels = await mongo.ytbChannels.find({ channelId: channelId });
+  if (channels.length) {
+    // if channel is already watched, notify user and remove message with command
+    console.log(`User ${msg.author.tag} tried to add already watched channel.`)
+    msg.reply(`Kanál ${channels[0].channelName} je již sledován ✋`);
+    msg.delete();
+    return true;
+  }
+  return false;
 }
 
 
@@ -70,29 +57,36 @@ function execute(msg, args, discordChannel) {
       msg.reply(`Špatně jsi zadal příkaz 👎`);
       msg.delete();
     } else {
-      if (!isWatched(args[1], msg)) {
-        // ask ytb API
-        axios.get(`https://www.googleapis.com/youtube/v3/channels?key=${process.env.YTB_API_KEY}&id=${args[1]}&part=contentDetails,snippet`)
-          .then(response => {
-            if (response.data.pageInfo.totalResults === 0) {
-              // if no channel found, notify user and delete message with command
-              console.log(`User ${msg.author.tag} tried to add invalid youtubeID channel.`)
-              msg.reply(`Špatné ID kanálu 👎`);
-              msg.delete();
-            } else {
-              let channel = {
-                channelName: response.data.items[0].snippet.title,
-                channelId: args[1],
-                playlistId: response.data.items[0].contentDetails.relatedPlaylists.uploads,
-                lastVideoId: '',
-                lastVideoTitle: '',
-                discordChannel: args[0],
-                discordMention: args[2]
+      isWatched(args[1], msg).then((resp) => {
+        if (!resp) {
+          // ask ytb API
+          axios.get(`https://www.googleapis.com/youtube/v3/channels?key=${process.env.YTB_API_KEY}&id=${args[1]}&part=contentDetails,snippet`)
+            .then(response => {
+              if (response.data.pageInfo.totalResults === 0) {
+                // if no channel found, notify user and delete message with command
+                console.log(`User ${msg.author.tag} tried to add invalid youtubeID channel.`)
+                msg.reply(`Špatné ID kanálu 👎`);
+                msg.delete();
+              } else {
+                // get last video
+                checker.getLastVideo(response.data.items[0].contentDetails.relatedPlaylists.uploads)
+                  .then((video) => {
+                    // send whole channel to save
+                    let channel = {
+                      channelName: response.data.items[0].snippet.title,
+                      channelId: args[1],
+                      playlistId: response.data.items[0].contentDetails.relatedPlaylists.uploads,
+                      lastVideoId: video.lastVideoId,
+                      lastVideoTitle: video.lastVideoTitle,
+                      discordChannel: args[0],
+                      discordMention: args[2]
+                    }
+                    saveNewChannel(channel, msg);
+                  });
               }
-              saveNewChannel(channel, msg);
-            }
-          });
-      }
+            });
+        }
+      });
     }
   } else {
     console.log(`User ${msg.author.tag} tried YTB command without permision.`)

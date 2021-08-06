@@ -1,10 +1,9 @@
 require('dotenv').config();
-const fs = require('fs');
 const axios = require('axios');
+const mongo = require('../services/mongo');
 
 var interval;
 var botInstance;
-const filePath = 'data/channels.json';
 
 async function getLastVideo(playlist) {
   return new Promise((resolve, reject) => {
@@ -17,7 +16,7 @@ async function getLastVideo(playlist) {
         resolve(video);
       })
       .catch(err => {
-        console.log('Error..', err);
+        console.error('Error..', err);
         reject(err);
       });
   });
@@ -26,27 +25,34 @@ async function getLastVideo(playlist) {
 async function ytb_checker() {
   console.log('Checking ytb...')
 
-  // load channels from file
-  let rawData = fs.readFileSync(filePath);
-  let channels = JSON.parse(rawData);
+  // load channels from db
+  const channels = await mongo.ytbChannels.find({});
+
 
   // check for new videos
-  var index = 0;
-  channels.forEach(async channel => {
-    await getLastVideo(channel.playlistId)
-      .then(video => {
-        if (video.lastVideoId !== channel.lastVideoId) {
-          channel.wasNew = true;
-          channel.lastVideoId = video.lastVideoId;
-          channel.lastVideoTitle = video.lastVideoTitle;
-        }
-        index++;
-        if (index === channels.length) {
-          index = 0;
-          processVideos(channels);
+  var promises = [];
+  channels.forEach((channel) => {
+    promises.push(new Promise((resolve, reject) => {
+      getLastVideo(channel.playlistId)
+        .then((video) => {
+          if (video.lastVideoId !== channel.lastVideoId) {
+            channel.wasNew = true;
+            channel.lastVideoId = video.lastVideoId;
+            channel.lastVideoTitle = video.lastVideoTitle;
+          } else {
+            channel.wasNew = false;
+          }
+          resolve(channel);
+        })
+    }));
+    Promise.all(promises)
+      .then((values) => {
+        if (values.length === channels.length) {
+          processVideos(values);
         }
       });
-  });
+  })
+  console.log('Ytb check done')
 }
 
 /**
@@ -54,30 +60,26 @@ async function ytb_checker() {
  * @param Array channels - array of channels and their last videos 
  */
 function processVideos(channels) {
-  let dirty = false;
-
   channels.forEach((channel) => {
     if (channel.wasNew && channel.wasNew === true) {
-      dirty = true;
-      console.log('Sending new video notify');
+      console.log(`Sending new video notify for channel ${channel.channelName}`);
 
       botInstance.channels.cache.get(channel.discordChannel)
-        .send(`<@&${channel.discordMention}> **${channel.channelName}** má nové video, koukej! **${channel.lastVideoTitle}** https://www.youtube.com/watch?v=${channel.lastVideoId}`)
+        .send(`<@&${channel.discordMention}> **${channel.channelName}** má nové video, koukej! ` +
+          `**${channel.lastVideoTitle}** https://www.youtube.com/watch?v=${channel.lastVideoId}`)
       delete channel.wasNew;
+
+      // update channel in DB
+      mongo.ytbChannels.updateOne({ channelId: channel.channelId }, channel, function (err, docs) {
+        if (err) {
+          console.error(`Channel ${channel.channelName} failed update in DB`);
+        }
+        else {
+          console.log(`Channel ${channel.channelName} updated in DB`);
+        }
+      });
     }
   });
-
-  if (dirty) {
-    // save into file if there are things to save
-    try {
-      fs.writeFileSync(filePath, JSON.stringify(channels, null, 2))
-      console.log('channels saved')
-    } catch (err) {
-      console.error(err)
-    }
-  } else {
-    console.log('check done')
-  }
 }
 
 module.exports = {
@@ -87,7 +89,7 @@ module.exports = {
    */
   start(bi) {
     botInstance = bi;
-    // ytb_checker();
+    ytb_checker();
     interval = setInterval(() => {
       ytb_checker();
     }, 600000);
@@ -99,5 +101,6 @@ module.exports = {
   stop() {
     clearInterval(interval);
     console.log('Stopped ytb checker.')
-  }
+  },
+  getLastVideo,
 };

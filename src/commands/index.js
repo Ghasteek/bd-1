@@ -3,6 +3,5 @@ module.exports = {
     Clear: require('./clear'),
     Recept: require('./recept'),
     Hra: require('./hra'),
-    FollowChannel: require('./ytb'),
-    Jihlavanka: require('./standard')
+    FollowChannel: require('./ytb')
 };
