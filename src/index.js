@@ -3,9 +3,10 @@ const fs = require('fs');
 require('dotenv').config();
 const Discord = require('discord.js');
 
-// get 
+// get services
 let reactionRoles = require('./services/reaction_roles');
 let ytb_checker = require('./services/ytb_checker');
+const logger = require('./services/logger').logger;
 
 // new bot instance
 const bot = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
@@ -35,7 +36,7 @@ let usableEmojis = Object.keys(data.roles);
 function botLogin() {
     // connect to discord, TOKEN from .env
     bot.login(process.env.TOKEN).catch(err => {
-        console.log('Cannot login, try again in 10s...');
+        logger.debug('main: Cannot login, try again in 10s...');
         setTimeout(() => {
             botLogin();
         }, 10000);
@@ -44,7 +45,7 @@ function botLogin() {
 
 // Print info about success connecting of bot
 bot.on('ready', () => {
-    console.info(`Logged in as ${bot.user.username}.`);
+    logger.info(`main: Logged in as ${bot.user.username}.`);
     // init reaction roles handler
     reactionRoles.init(bot, data, usableEmojis);
     ytb_checker.start(bot);
@@ -62,15 +63,15 @@ bot.on('message', msg => {
 
         // If there is  valid command, execute it, or just log error
         if (bot.commands.has(command)) {
-            console.info(`Called command ${command} with arguments: ${args}`);
+            logger.debug(`main: User  ${msg.author.tag} called command ${command}.`, args);
             try {
                 bot.commands.get(command).execute(msg, args, msg.channel);
             } catch (error) {
-                console.error(error);
-                msg.reply('There was an error trying to execute this command...')
+                logger.error(`main: Error executing ${command} command from user ${msg.author.tag}`, error);
+                msg.reply('Něco se pokazilo 😟');
             }
         } else {
-            console.error('no command.');
+            logger.info(`main: User  ${msg.author.tag} tried to call unexisting command "${command}".`);
         };
     };
 });

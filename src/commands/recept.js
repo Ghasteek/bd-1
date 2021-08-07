@@ -1,3 +1,5 @@
+const logger = require('../services/logger').logger;
+
 module.exports = {
     name: 'recept',
     description: 'Odepíše náhodný recept na kávu.',
@@ -7,11 +9,11 @@ module.exports = {
         // path to json file with recipes
         const filePath = 'data/recipes.json';
 
-        if ((args[0] === "add") && (msg.member.permissionsIn(channel).toArray().includes('MANAGE_MESSAGES')) ){
+        if ((args[0] === "add") && (msg.member.permissionsIn(channel).toArray().includes('MANAGE_MESSAGES'))) {
             // trim command and parameter off message content
             msg.content = msg.content.replace("recept add ", "");
 
-            fs.readFile(filePath, 'utf-8', function(err, data) {
+            fs.readFile(filePath, 'utf-8', function (err, data) {
                 if (err) throw err;
 
                 // load actual state of *.json file
@@ -20,11 +22,11 @@ module.exports = {
                 recipesObj.recipes.push(msg.content);
 
                 // write whole bunch to file
-                fs.writeFile(filePath, JSON.stringify(recipesObj, null, 4), 'utf-8', function(err) {
+                fs.writeFile(filePath, JSON.stringify(recipesObj, null, 4), 'utf-8', function (err) {
                     if (err) throw err;
                     // just say thank you
-                    msg.reply("Děkuji za nový recept.");
-                    console.log('New recipe added.');
+                    msg.reply("Děkuji za nový recept 😊");
+                    logger.info(`recept: User  ${msg.author.tag} added recipe.`, msg.content);
                 });
             });
 

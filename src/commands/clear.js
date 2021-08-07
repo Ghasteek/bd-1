@@ -1,3 +1,5 @@
+const logger = require('../services/logger').logger;
+
 module.exports = {
     name: 'clear',
     description: 'Delete specified number of messages.',
@@ -6,18 +8,18 @@ module.exports = {
             let messagesToDelete = parseInt(args) + 1;
             if (messagesToDelete > 0) {
                 channel.bulkDelete(messagesToDelete)
-                    .then(messages => console.log(`Deleted ${messages.size} messages.`))
+                    .then(messages => logger.info(`clear: User  ${msg.author.tag} deleted ${messages.size} messages.`))
                     .catch(error => {
-                        msg.reply(error.message);
-                        console.error(error.message);
+                        msg.reply('Něco se pokazilo 😟');
+                        logger.error(`clear: Error while deleting messages!`, error.message);
                     });
 
             } else {
-                msg.reply('Not a number in arguments!');
-                console.error('Not a number in arguments!');
+                msg.reply('Po příkazu !clear musíš zadat číslo! 🧐');
+                logger.info(`clear: User  ${msg.author.tag} called !clear with wrong arguments.`);
             }
         } else {
-            console.log(`User ${msg.author.tag} tried CLEAR command without permision.`)
+            logger.info(`clear: User ${msg.author.tag} tried CLEAR command without permision.`);
             msg.delete();
         };
     },

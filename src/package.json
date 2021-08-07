@@ -7,7 +7,9 @@
     "axios": "^0.21.1",
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
-    "mongoose": "^5.13.5"
+    "mongoose": "^5.13.5",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.5"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"

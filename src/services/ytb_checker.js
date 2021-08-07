@@ -1,6 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const mongo = require('../services/mongo');
+const logger = require('./logger').logger;
 
 var interval;
 var botInstance;
@@ -16,14 +17,14 @@ async function getLastVideo(playlist) {
         resolve(video);
       })
       .catch(err => {
-        console.error('Error..', err);
+        logger.error('ytb_checker: Axios error', err);
         reject(err);
       });
   });
 }
 
 async function ytb_checker() {
-  console.log('Checking ytb...')
+  logger.debug('ytb_checker: Checking ytb...');
 
   // load channels from db
   const channels = await mongo.ytbChannels.find({});
@@ -52,7 +53,7 @@ async function ytb_checker() {
         }
       });
   })
-  console.log('Ytb check done')
+  logger.debug('ytb_checker: Ytb check done');
 }
 
 /**
@@ -62,7 +63,7 @@ async function ytb_checker() {
 function processVideos(channels) {
   channels.forEach((channel) => {
     if (channel.wasNew && channel.wasNew === true) {
-      console.log(`Sending new video notify for channel ${channel.channelName}`);
+      logger.info(`ytb_checker: Sending new video notify into discord channel "${channel.discordChannel}" for ytb channel "${channel.channelName}"`);
 
       botInstance.channels.cache.get(channel.discordChannel)
         .send(`<@&${channel.discordMention}> **${channel.channelName}** má nové video, koukej! ` +
@@ -72,10 +73,10 @@ function processVideos(channels) {
       // update channel in DB
       mongo.ytbChannels.updateOne({ channelId: channel.channelId }, channel, function (err, docs) {
         if (err) {
-          console.error(`Channel ${channel.channelName} failed update in DB`);
+          logger.error(`ytb_checker: Channel ${channel.channelName} failed to update in DB`, err);
         }
         else {
-          console.log(`Channel ${channel.channelName} updated in DB`);
+          logger.info(`ytb_checker: Channel ${channel.channelName} updated in DB`);
         }
       });
     }
@@ -93,14 +94,14 @@ module.exports = {
     interval = setInterval(() => {
       ytb_checker();
     }, 600000);
-    console.log('Started ytb checker.')
+    logger.debug(`ytb_checker: STARTED interval for ytb checker.`);
   },
   /**
   * Stops interval to check for last ytb videos 
   */
   stop() {
     clearInterval(interval);
-    console.log('Stopped ytb checker.')
+    logger.debug(`ytb_checker: STOPPED interval for ytb checker.`);
   },
   getLastVideo,
 };

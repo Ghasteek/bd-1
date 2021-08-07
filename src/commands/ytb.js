@@ -3,6 +3,7 @@ const axios = require('axios');
 
 const mongo = require('../services/mongo');
 const checker = require('../services/ytb_checker');
+const logger = require('../services/logger').logger;
 
 /**
  * Take channel object and save it to file. Then, thanks to msg object, will answer to user, that channel was added to watched
@@ -14,11 +15,11 @@ function saveNewChannel(channel, msg) {
   try {
     let newChannel = new mongo.ytbChannels(channel);
     newChannel.save();
-    console.log(`User ${msg.author.tag} added ytb channel ${channel.channelName}`);
+    logger.info(`ytb: User ${msg.author.tag} added ytb channel ${channel.channelName}`);
     msg.reply(`Přidán kanál  ${channel.channelName} 👍`);
     msg.delete();
   } catch (error) {
-    console.log(error)
+    logger.error(`ytb: Failed add new channel ${channel.channelName} into DB.`, error);
   }
 }
 
@@ -34,7 +35,7 @@ async function isWatched(channelId, msg) {
   const channels = await mongo.ytbChannels.find({ channelId: channelId });
   if (channels.length) {
     // if channel is already watched, notify user and remove message with command
-    console.log(`User ${msg.author.tag} tried to add already watched channel.`)
+    logger.info(`ytb: User ${msg.author.tag} tried to add already watched channel.`)
     msg.reply(`Kanál ${channels[0].channelName} je již sledován ✋`);
     msg.delete();
     return true;
@@ -53,7 +54,7 @@ function execute(msg, args, discordChannel) {
   if (msg.member.permissionsIn(discordChannel).toArray().includes('MANAGE_MESSAGES')) {
     if (args.length !== 3) {
       // if not enougth arguments, notify user and remove message with command
-      console.log(`User ${msg.author.tag} tried to add channel with wrong arguments.`)
+      logger.info(`ytb: User ${msg.author.tag} tried to add channel with wrong arguments.`)
       msg.reply(`Špatně jsi zadal příkaz 👎`);
       msg.delete();
     } else {
@@ -64,7 +65,7 @@ function execute(msg, args, discordChannel) {
             .then(response => {
               if (response.data.pageInfo.totalResults === 0) {
                 // if no channel found, notify user and delete message with command
-                console.log(`User ${msg.author.tag} tried to add invalid youtubeID channel.`)
+                logger.info(`ytb: User ${msg.author.tag} tried to add invalid youtubeID channel.`)
                 msg.reply(`Špatné ID kanálu 👎`);
                 msg.delete();
               } else {
@@ -89,7 +90,7 @@ function execute(msg, args, discordChannel) {
       });
     }
   } else {
-    console.log(`User ${msg.author.tag} tried YTB command without permision.`)
+    logger.info(`ytb: User ${msg.author.tag} tried !ytb command without permision.`)
     msg.delete();
   };
 }
