@@ -3,5 +3,6 @@ module.exports = {
     Clear: require('./clear'),
     Recept: require('./recept'),
     Hra: require('./hra'),
-    FollowChannel: require('./ytb')
+    FollowChannel: require('./ytb'),
+    Status: require('./status')
 };

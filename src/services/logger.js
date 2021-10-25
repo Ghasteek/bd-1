@@ -17,7 +17,9 @@ const timezoned = () => {
     });
 }
 
-const logger = winston.createLogger({
+let history = [];
+
+const winst = winston.createLogger({
     transports: [
         // ERROR file
         new winston.transports.DailyRotateFile({
@@ -60,4 +62,24 @@ const logger = winston.createLogger({
     ]
 });
 
-module.exports = { logger }
+const logger = {
+    debug: function (msg) {
+        winst.debug(msg);
+        addHistory('debug', msg)
+    },
+    info: function (msg) {
+        winst.info(msg);
+        addHistory('info', msg)
+    },
+    error: function (msg) {
+        winst.error(msg);
+        addHistory('error', msg)
+    }
+}
+
+function addHistory(level, msg) {
+    if (history.length >= 30) history.shift();
+    history.push(`${new Date().toISOString()} - ${level} - ${msg}`);
+}
+
+module.exports = { logger, history }
