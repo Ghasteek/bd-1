@@ -7,6 +7,7 @@ const Discord = require('discord.js');
 let reactionRoles = require('./services/reaction_roles');
 let ytb_checker = require('./services/ytb_checker');
 const logger = require('./services/logger').logger;
+logger.debug('main: STARTING BOT from scratch.');
 
 // new bot instance
 const bot = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
@@ -50,6 +51,9 @@ bot.on('ready', () => {
     reactionRoles.init(bot, data, usableEmojis);
     ytb_checker.start(bot);
 });
+
+// on error relogin
+bot.on('error', err => { botLogin() });
 
 
 // Handle messages on discord server
