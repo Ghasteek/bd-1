@@ -53,14 +53,14 @@ module.exports = {
         if (args[0] === 'w') {
             msg.author.send(
                 message,
-                { split: true }
+                { split: { prepend: '\`\`\`', append: '\`\`\`' } }
             );
         } else {
             msg.channel.send(
                 message,
-                { split: true }
+                { split: { prepend: '\`\`\`', append: '\`\`\`' } }
             );
         }
-        msg.delete();
+        if (msg.channel.type !== 'dm') msg.delete();
     },
 };
