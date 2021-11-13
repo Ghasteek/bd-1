@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# start new session with defined name
+tmux new-session -d -s 'bd-1'
+# change directory to bots SRC and run serve
+tmux send-keys -t 'bd-1' 'cd ~/bd-1/src' C-m 'npm run serve' C-m
